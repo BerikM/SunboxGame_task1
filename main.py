@@ -1,29 +1,42 @@
-# from cosmpy.aerial.client import LedgerClient, NetworkConfig
-
-# # connect to Fetch.ai network using default parameters
-# ledger_client = LedgerClient(NetworkConfig.fetchai_mainnet())
-
-# # alice: str = 'fetch12q5gw9l9d0yyq2th77x6pjsesczpsly8h5089x'
-# alice: str = 'fetch168gv026mqmnt0hr4hsw7qr080f3m3dyranwt5e'
-# balances = ledger_client.query_bank_all_balances(alice)
-
-
-# # show all coin balances
-# print( balances)
-# # for coin in balances:
-# #   print(f'{coin.amount}{coin.denom}')
-
 from web3 import Web3
 
-# Подключение к узлу блокчейна Ethereum (локальный узел или удаленный узел Infura)
-w3 = Web3(Web3.HTTPProvider('https://mainnet.infura.io/v3/bcfc6cf29c004d6aa0ca5110da8f521f'))
+# Подключение к локальному узлу Ethereum
+w3 = Web3(Web3.HTTPProvider('http://localhost:7545'))
 
-# Адрес кошелька, информацию о котором вы хотите получить
-wallet_address = '0x96675ea0b9478751c79896b404474598dd693df5'
+# подключение кошелька
+private_key = "0xd0d83c4aa1223f4207d7bb170480f9525a11f63e44d509b1fd42acd2b565810a"
+account = w3.eth.account.from_key(private_key)
 
 # Получение баланса кошелька
-balance = w3.to_checksum_address(wallet_address)
-# balance_in_eth = w3.from_wei(balance, 'ether')
+balance = w3.eth.get_balance(account.address)
+print(f'Баланс кошелька: {balance} wei')
 
-# print(f'Баланс кошелька {wallet_address}: {balance_in_eth} ETH')
-print(w3.to_wei(balance, "ether"))
+# Отправка транзакции
+recipient = '0x2AFe86947ce7EB9C0e031968e0aC2681fF832b10'  # Адрес получателя
+amount = 1  # Количество эфира для отправки
+
+# Подготовка транзакции
+
+def transaction_info(recipient, amount, account):
+    return {
+    'to': recipient,
+    'value': w3.to_wei(amount, 'ether'),
+    'gas': 21000,
+    'gasPrice': w3.to_wei('50', 'gwei'),
+    'nonce': w3.eth.get_transaction_count(account.address),
+
+}
+
+def transaction_block(account, transaction):
+    try:
+        # Подпись транзакции
+        signed_txn = w3.eth.account.sign_transaction(transaction, private_key=account.key)
+
+        # Отправка подписанной транзакции
+        tx_hash = w3.eth.send_raw_transaction(signed_txn.rawTransaction)
+        print(f'Хэш транзакции: {w3.to_hex(tx_hash)}')
+    except:
+       print("you do not have enough funds for the transaction or do not have access")
+
+transaction = transaction_info(recipient, amount, account)
+transaction_block(account, transaction)
